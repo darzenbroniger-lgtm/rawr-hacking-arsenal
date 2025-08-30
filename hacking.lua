@@ -134,6 +134,42 @@ game.StarterGui:SetCore("SendNotification", {
    Duration = 5
 })
 
+-- Aimbot logic for enemies (soldier_model)
+local function getNearestPlayer(enemyRoot)
+    local nearestPlayer = nil
+    local nearestDist = math.huge
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (player.Character.HumanoidRootPart.Position - enemyRoot.Position).Magnitude
+            if dist < nearestDist then
+                nearestDist = dist
+                nearestPlayer = player
+            end
+        end
+    end
+    return nearestPlayer
+end
 
+local function aimAtNearestPlayer(enemyModel)
+    local root = enemyModel:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local targetPlayer = getNearestPlayer(root)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetPos = targetPlayer.Character.HumanoidRootPart.Position
+        -- Calculate the direction to look at
+        local lookVector = (targetPos - root.Position).Unit
+        local newCF = CFrame.new(root.Position, targetPos)
+        root.CFrame = CFrame.new(root.Position, targetPos)
+    end
+end
+
+-- Update all enemy models every frame (for smooth tracking)
+game:GetService("RunService").Heartbeat:Connect(function()
+    for _, enemy in pairs(workspace:GetChildren()) do
+        if enemy:IsA("Model") and enemy.Name == "soldier_model" and not enemy:FindFirstChild("friendly_marker") then
+            aimAtNearestPlayer(enemy)
+        end
+    end
+end)
 
       
