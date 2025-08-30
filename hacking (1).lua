@@ -134,6 +134,43 @@ game.StarterGui:SetCore("SendNotification", {
    Duration = 5
 })
 
+--[[
+==========================
+== ENEMY AIMBOT SECTION ==
+==========================
+--]]
 
+-- Function to find nearest player to a position
+local function getNearestPlayer(pos)
+    local closestPlayer, closestDist = nil, math.huge
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (player.Character.HumanoidRootPart.Position - pos).Magnitude
+            if dist < closestDist then
+                closestDist = dist
+                closestPlayer = player
+            end
+        end
+    end
+    return closestPlayer
+end
 
-      
+-- Function to make a soldier_model aim at the nearest player
+local function aimEnemyAtPlayer(enemy)
+    local root = enemy:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local nearestPlayer = getNearestPlayer(root.Position)
+    if nearestPlayer and nearestPlayer.Character and nearestPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetPos = nearestPlayer.Character.HumanoidRootPart.Position
+        root.CFrame = CFrame.new(root.Position, targetPos)
+    end
+end
+
+-- Make all enemies aim every frame
+game:GetService("RunService").Heartbeat:Connect(function()
+    for _, v in pairs(workspace:GetChildren()) do
+        if v:IsA("Model") and v.Name == "soldier_model" and not v:FindFirstChild("friendly_marker") then
+            aimEnemyAtPlayer(v)
+        end
+    end
+end)
